@@ -1,0 +1,60 @@
+\chapter{设置Numpy}\label{sec:broadcasting}
+\section{Numpy是什么？}
+Numpy是Python科学计算基础包。它以Python库的形式提供了多维数组对象，以及多种多样的衍生对象，比如掩码式数组（掩码式数组是指可能含有缺失或者无效项的数组）和矩阵，Numpy包含丰富多样的用于快速操作数组的程序，比如数学运算，逻辑运算，阵形运算，分类和选取，I/O操作，离散傅里叶变换，基本的线性代数，基本统计运算以及随机模拟等等。
+
+Numpy的核心是ndarray对象，它封装了$n$维包含同类数据的数组，并且附带许多已经编译好的高性能的运算方法。Numpy数组和Python原生态序列有几点非常重要的区别：
+\begin{compactitem}
+	\item Numpy数组在创建的时候就必须指定大小，而Python序列可以动态增长或者缩减。改变某个ndarray的大小将重新创建一个新的数组，并且删除原有的数组
+	\item Numpy数组的元素要求是同一类型，因此他们在内存中的大小相同。一个例外是：当Numpy的元素是Python对象的时候（包括ndarray）有可能占有的内存不一样大
+	\item Numpy数组使得高等数学运算以及其他类型的运算变得容易，尤其是数据量巨大的时候。通常情况下，与Python原生态的序列类型相比，Numpy的运算更高效，代码量更少
+	\item 越来越多的基于Python的科学计算包用到了Numpy数组。虽然这些库支持Python序列类型的输入，但是内部实现还是需要将其转换为Numpy数组类型，并且输出通常就是Numpy数组。换句话说，为了能更高效使用当今大多数Python计算包，仅仅知道Python原生态的序列类型是不够的，还需要知道如何使用Numpy数组
+\end{compactitem}
+
+在科学计算中，序列能容纳的大小和运算速度尤其重要。作为一个简单的例子，将一个一维数组序列a的每个元素和另外一个一维数组序列b相对应的元素相乘，并将计算结果保存在序列c。
+\begin{python}
+c = []
+for i in range(len(a)):
+c.append(a[i]*b[i])
+\end{python}
+
+以上将获得正确的结果。但是，如果a和b都包含上百万的元素，我们需要付出在Python中循环上百万次的代价。当然，我们可以直接用C语言来完成同样的运算，可以从中获得C语言运算速度的优势（为了说明问题，我们在以下C语言中忽略变量的申明、初始化、内存分配等）。
+\begin{python}
+for (i = 0; i < rows; i++){
+c[i] = a[i]*b[i];
+}
+\end{python}
+
+利用C语言来实现省去了解释Python代码和操作Python对象的开销，但Python语言的开发速度、维护性等优点却无法从C语言中获取。若不用向量的思想，无论C语言或者Python，其代码量都会随着数据维度的增加而成倍增加。想象一下，如果这个例子是两个矩阵的运算，那么采用C语言将可能写成这样：
+\begin{python}
+for (i = 0; i < rows; i++) {
+	for (j = 0; j < columns; j++) {
+	c[i][j] = a[i][j]*b[i][j];
+	}
+}
+\end{python}
+
+Numpy将C语言的速度和Python语言带来的好处都给予了我们。ndarray在运算的时候默认会采用将内部元素按顺序一个一个进行运算的特性，即“element-by-element”。并且其内部实现运算的方式其实是已经预先编译好的C代码，非常高效。在Numpy中，
+\begin{python}
+c = a * b
+\end{python}
+
+以上用一行代码就可以做到刚才我们的例子所做的事情，而不用去关心a和b的维度。Numpy高效又简介除了得益于Python语言的优势和预编译C代码的方式外，矢量运算和广播是关键的原因。
+
+矢量运算将循环、索引这些隐藏起来，后台以优化过的C代码的速度运行。矢量运算有许多优点，比如：
+\begin{compactitem}
+	\item 矢量运算的代码更简洁易读
+	\item 更少的代码意味着更少的Bug
+	\item 代码更接近与标准的数学符号公式，使得更容易将数学公式转化为代码和修改、维护代码
+	\item 矢量运算可以产生更加“Pythonic”\footnote{Python下输入“import this”，会告知“Pythonic”的具体含义}的代码。没有矢量运算我们的代码可能一团糟，不容易阅读和维护。
+\end{compactitem}
+
+广播描述了以“element-by-element”方式运算过程中遵守的隐含规则。总的来说，Numpy中所有的运算，包括数学运算，逻辑运算，位运算，功能运算等都遵守这个隐含规则。在上一个例子中，a和b可以是有着相同shape\footnote{一个元祖，比如shape为（2,3）的数组表示两行三列的矩阵}的多维数组，或者是一个标量和一个数组，甚至是两个不同shape的多维数组，结果是小一点的数组会“扩展”到和大一点的数组一样大，然后再进行相关运算。广播的规则描述的就是什么时候应该“扩展”和如何“扩展”。只要遵守广播规则，最终计算结果不仅是唯一的，而且是有物理意义的。具体详细信息可以参考\hyperref[sec:broadcasting]{Numpy 广播}。
+\section{安装Numpy}
+大多数情况下，安装Numpy最好的方式都是用与你操作系统相对应的已经编译好的软件包。可以参考\url{http://scipy.org/install.html}查询可选项。若已经安装好pip\footnote{windows下安装好Python后在Script文件夹可以找到pip}，推荐直接通过命令
+\begin{python}
+pip install numpy
+\end{python}
+来单独安装Numpy。不过更推荐的方式是安装Python发行版如\href{https://www.anaconda.com/download/}{anaconda}，它集成了Python环境、Numpy、Pandas、Scipy、Matplotlib等基于Python的科学计算包，并且截止\today 其Python版本已经更新到了3.6。
+
+用户也可以从源码安装，请参考\hyperref[sec:broadcasting]{Numpy 源码安装}。这类信息主要是为高级用户准备的。
+

@@ -1,0 +1,33 @@
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+	%green bar
+	\fill[cvgreen] (current page.north west) rectangle ([xshift=5cm]current page.south west);
+	%gray bar
+	\fill[cvgray] ([yshift=-5cm]current page.north west) rectangle ([yshift=-10cm]current page.north east);
+	%title and date
+	\node[cvtext, right] at ([yshift=-7cm]current page.north west){\addfontfeature{Scale = 5}\bfseries Python\huge 科学计算包入门};
+	\node[cvtext, above left] at ([xshift=-1cm]current page.north east){\huge\bfseries \today};
+	%cover photo
+	\node[inner sep=0pt, below right] (image) at ([xshift=5cm,yshift=-9cm]current page.north west){\includegraphics[width=9.7cm, height=13.5cm]{image/title.png}};
+	%name and address
+	\node[text width = 15cm, inner sep=0.3cm, below right] at ([xshift=0cm]image.south west){\centering\Large\obeylines
+	Numpy
+	Matplotlib
+	Pandas
+	Scipy 
+	WxPython
+	};
+	%attachments
+	\node[white, text width = 5cm, inner sep=0.3cm, above right] at ([yshift=1cm]current page.south west) {\large\obeylines
+		\textbf{\Large Introduction:}
+		Orgnaize and Translate
+		the official document
+		of Python by TOM
+	};
+	%address
+	\node[text width = 15cm, inner sep=0.3cm, below right] at ([xshift=11cm,yshift=-6cm]image.south west){\Large\obeylines
+	{\addfontfeature{Scale = 0.6}bluedream770@sina.com}};
+\end{tikzpicture}
+\end{titlepage}
+
+

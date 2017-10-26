@@ -1,0 +1,196 @@
+\chapter{Numpy快速入门}
+\section{先决条件}
+在阅读本章之前，你需要对Python有一定的了解。如果你想回顾一下Python，可以参看\href{https://docs.python.org/}{Python 教程}。中文教程可以参考廖雪峰老师的教程：\href{https://www.liaoxuefeng.com/}{廖雪峰Python3 教程}。该教程通俗易懂，非常适合入门；教程最后的实战部分有一定难度，可以视情况而做。
+
+如果你想运行本教程的示例，你必须预先安装一些必要的软件。详情请见\url{http://scipy.org/install.html}。也可以直接安装Python发行版\href{https://www.anaconda.com/download/}{anaconda}。
+
+本书的运行环境是\textbf{Python 3.6.1 |Anaconda 4.4.0 (64-bit)}。
+
+\section{基本知识}
+Numpy中最主要的对象是ndarray，即$n$维数组。它封装了$n$维同类数据以及对这些数据的操作函数。他将相同的元素（一般来说都是一些数字）组合成一张表，用一个元祖来表示元素的索引。在Numpy中，维数被称为axes，即“轴”；轴的数量叫做rank，即“秩”。在线性代数中，一个矩阵A的列秩是A的线性独立的纵列的极大数。若A的秩为$n$，则A的列向量可以表示$n$维空间。
+
+举个例子，3D坐标[1,2,1]是一个rank为1，axes长度是3的数组，他只有一维。接下来的例子中，rank为2（它是二维的）。第一维的长度是2，第二维的长度是3。
+\begin{python}
+[[ 1., 0., 0.],
+[ 0., 1., 2.]]
+\end{python}
+
+Numpy的数组类叫做ndarray，通常也可以直接称作array。注意，numpy.array和Python标准的class类array.array是有区别的。array.array仅仅只能处理一维数组，且提供的功能函数少很多。ndarray中重要的属性有：
+\begin{compactitem}
+	\item \textbf{ndarray.ndim} 数组的维数，即秩
+	\item \textbf{ndarray.shape} 数组的组成方式。以一个元祖的形式来表示每一个维度的大小。如果一个矩阵有$m$行$n$列，则shape可以表示成$(m,n)$。shape的元祖长度实际上就是ndim，本例中ndim=2
+	\item \textbf{ndarray.size} 数组包含元素个数的总量。size值等于shape元祖里各个维度的乘积。size值并不表示数据占有的内存的大小，还需要知晓每个元素占有的内存大小
+	\item \textbf{ndarray.dtype} dtype用于描述数组元素的类型。dtype既支持创建新的type，也支持Python标准的type。当然，Numpy也提供了自己的type，比如numpy.int32, numpy.int16, and numpy.float64
+	\item \textbf{ndarray.itemsize}数组中每个元素的大小。比如，若数组中的元素的dtype是float64，则它的itemsize是8（=64/8），若数组中元素的dtype是comlex32，则它的itemsize是4（=32/8）。ndarray.itemsize与ndarray.dtype.itemsize值相等
+	\item \textbf{ndarray.data} 数组中包含元素数据的buffer。一般来说我们没有必要直接用这个属性，因为我们一般是通过index来访问数据元素
+\end{compactitem}
+
+总结一下，一个ndarray类包含数据和处理数据的方法。数据中几个重要的属性是ndim、shape、size、dtype、itemsize、data。其中，shape可以推导出ndim。shape+dtype可以推导出除了data以外的其他全部属性。而data更接近底层访问数据的接口，可以用于和C语言等低级语言对接。
+\subsection{一个例子}
+\begin{python}
+>>> import numpy as np
+>>> a = np.arange(15).reshape(3, 5)
+>>> a
+array([[ 0,  1,  2,  3,  4],
+       [ 5,  6,  7,  8,  9],
+       [10, 11, 12, 13, 14]])
+>>> a.shape
+(3, 5)
+>>> a.ndim
+2
+>>> a.dtype.name
+'int32'
+>>> a.itemsize
+4
+>>> a.size
+15
+>>> type(a)
+<class 'numpy.ndarray'>
+>>> b = np.array([6, 7, 8])
+>>> b
+array([6, 7, 8])
+>>> type(b)
+<class 'numpy.ndarray'>
+>>> b.data
+<memory at 0x0000000003494948>
+\end{python}
+\subsection{Numpy数组的创建}
+有好几种创建Numpy数组的方法。首先，你可以用Numpy的array函数来创建一个Numpy数组，只需要给这个函数传入一个Python列表或者元祖作为参数。数组元素的dtype将从Python序列元祖的type中推导出来\footnote{若Python序列中有字符串和数字，经过推导后Numpy会统一成字符串类型}。
+\begin{python}
+>>> import numpy as np
+>>> a = np.array([2,3,4])
+>>> a
+array([2, 3, 4])
+>>> a.dtype
+dtype('int32')
+>>> b = np.array([1.2, 3.5, 5.1])
+>>> b.dtype
+dtype('float64')
+\end{python}
+
+array函数正确的用法应该是传入一个Python序列。一个经常犯的错误是直接给array函数出入多个数字作为参数，比如：
+\begin{python}
+>>> b = np.array([6, 7, 8])    #RIGHT
+>>> b = np.array(6, 7, 8)      #WRONG
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: only 2 non-keyword arguments accepted
+\end{python}
+
+若传入的参数是序列的序列，则array会将其转换为二维数组，以此类推，序列的序列的序列将被转换为三维数组\ldots
+\begin{python}
+>>> b = np.array([(1.5,2,3), (4,5,6)])
+>>> c = np.array([((1,2),(3,4)), ((5,6),(7,8))])
+>>> b
+array([[ 1.5,  2. ,  3. ],
+       [ 4. ,  5. ,  6. ]])
+>>> c
+array([[[1, 2],
+        [3, 4]],
+
+       [[5, 6],
+        [7, 8]]])
+\end{python}
+
+数组元素的dtype也可以在创建数组的时候显式地指出：
+\begin{python}
+>>> d = np.array( [ [1,2], [3,4] ], dtype=complex )
+>>> d
+array([[ 1.+0.j,  2.+0.j],
+       [ 3.+0.j,  4.+0.j]])
+\end{python}
+
+通常情况下，数组的元素的值刚开始是不确定的，但数组的大小却能定下来。因此，Numpy提供了一些可以创建固定大小数组的函数。数组元素的值可以用特定值填充占位或者直接使用随机值。这样的做法可以减少一些对于增长数组的需求，毕竟维护一个可增长数组是一个不小的开销。
+
+numpy.zero和numpy.ones分别创建一个元素值全为0和1的数组，numpy.empty创建一个元素值随机的数组，元素的值根据当时的内存状态而视，不一定为0。采用这些方法创建数组的时候都可以指定dtype。若不指定dtype，则dtype默认是float64。
+\begin{python}
+>>> a=np.zeros( (3,4) )
+>>> a
+array([[ 0.,  0.,  0.,  0.],
+       [ 0.,  0.,  0.,  0.],
+       [ 0.,  0.,  0.,  0.]])
+>>> a.dtype
+dtype('float64')
+>>> b=np.ones( (2,3,4), dtype=np.int16 )
+>>> b
+array([[[1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1]],
+
+       [[1, 1, 1, 1],
+        [1, 1, 1, 1],
+        [1, 1, 1, 1]]], dtype=int16)
+>>> np.empty( (2,3) )
+array([[ 0.,  0.,  0.],
+       [ 0.,  0.,  0.]])
+\end{python}
+
+为了创建一个数字序列，numpy提供了一个和Python内建函数range相类似的函数，即numpy.arange，该方法返回一个一维数组。
+\begin{python}
+>>> np.arange( 10, 30, 5 )
+array([10, 15, 20, 25])
+>>> np.arange( 0, 2, 0.3 ) # it accepts float arguments
+array([ 0. , 0.3, 0.6, 0.9, 1.2, 1.5, 1.8])
+\end{python}
+
+当给arange函数传入一个浮点数参数的时候，由于浮点数的精度是有限的，因此无法准确得知创建数组的元素个数。出于以上原因，numpy提供了一个更好用的函数numpy.linspace。linspace的用法和Matlab中的linspace用法基本类似，其两个参数的意义和arange一样，第三个参数表示元素的个数。它会根据元素的个数自动推导元素间的step。另外需要注意的是，arange函数的第二个参数不是闭区间，而linspace是闭区间。比如linspace(-5,5,1)最终产生的数组就包含了“5”这个点，而arange不会，需要注意其区别。
+\begin{python}
+>>> from numpy import pi
+>>> np.arange( 0, 2, 0.3 ) # it accepts float arguments
+array([ 0. , 0.3, 0.6, 0.9, 1.2, 1.5, 1.8])
+>>> np.arange(10,30,5)
+array([10, 15, 20, 25])
+>>> from numpy import pi
+>>> np.linspace(0,2,5)
+array([ 0. ,  0.5,  1. ,  1.5,  2. ])
+>>> np.arange(0,2,0.5)
+array([ 0. ,  0.5,  1. ,  1.5])
+>>> x=np.linspace(0, 2*pi, 10)
+>>> x
+array([ 0.        ,  0.6981317 ,  1.3962634 ,  2.0943951 ,  2.7925268 ,
+        3.4906585 ,  4.1887902 ,  4.88692191,  5.58505361,  6.28318531])
+\end{python}
+
+另外还可以根据已知的数组的shape依样画葫芦创建一个新的数组。涉及到的函数有zeros\_like、empty\_like、ones\_like等。下面的示例中，a是shape为(3,2)的数组，通过ones\_like创建一个shape为（3,2)，元素值全1数组b。
+\begin{python}
+>>> a=np.linspace(1. ,6. ,6).reshape(3,2)
+>>> a
+array([[ 1.,  2.],
+       [ 3.,  4.],
+       [ 5.,  6.]])
+>>> b=np.ones_like(a)
+>>> b
+array([[ 1.,  1.],
+       [ 1.,  1.],
+       [ 1.,  1.]])
+\end{python}
+
+总结一下，如表\ref{fig:CreateArray}所示，numpy提供了大量的数组创建函数。创建数组的关键在于告知数组的形状，元素的类型，元素的值。元素的dtype可以不用显式给出，numpy可以自主推导合适的dtype。元素的值也可以不用暂时不用指定，用“占位”的方式来减少对动态增长数组的需求。
+
+\begin{table}
+\centering
+\begin{tabular}{cp{10cm}}
+\toprule
+\tablehead{Function} & \tablehead{Instruction}\\
+\midrule
+array & 将输入数据（列表、元组、数组或者其他序列）转换为ndarray。推断出dtype或显式指定dtype。默认直接复制输入数据\\
+asarray & 将输入转换为ndarray，若输入本身就是一个ndarray就不复制\\
+arange & 类似内置的range，但返回的是一个ndarray而不是列表\\
+ones、ones\_like & 根据指定的形状和dtype创建一个全1的数组。ones\_like以另一个数组为参数，并根据其形状和dtype创建一个全1数组\\
+zeros、zeros\_like & 类似于ones和ones\_like，只不过产生的是全0数组而已\\
+empty、empty\_like & 创建新数组，只分配内存空间但不填充任何值\\
+eye、identity & 创建一个正方的$n\times n$单位矩阵（对角线为1，其余为0）\\
+\bottomrule
+\end{tabular}
+\caption{数组创建函数}\label{fig:CreateArray}
+\end{table}
+\subsection{print数组}
+当你print一个数组的时候，numpy会采用和打印Python嵌入式列表相类似的方式打印，为了方便查看，Numpy打印时添加了以下特征：
+\begin{compactitem}
+	\item 排在最后的axis打印方向是从左到右
+	\item 排在倒数第二的axis打印方向是从上到下
+	\item 其他axis打印方向是从上到下，但是会单独用一个空行来将不同的片区分开来，方便查看
+\end{compactitem}
+
+一维数组打印方式和列表一样，二维数组打印方式如矩阵形式，三维数组打印方式如矩阵的列表。
+
